@@ -7,7 +7,7 @@
     "config": {
 	"cmd": "/root/run.sh",
 	"entrypoint": [
-	    "/usr/bin/dumb-init",
+	    "/usr/local/bin/dumb-init",
 	    "--"
 	],
 	"author": "krister"
