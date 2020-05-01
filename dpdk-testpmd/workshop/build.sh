@@ -14,7 +14,7 @@ if pushd ${WORK_DIR} > /dev/null; then
 	--userenv userenv.json \
 	--requirements requirements.json.tmp \
 	--config config.json \
-	--skip-update true \
+	--skip-update false \
 	--log-level info \
 	--force true
 else
