@@ -1,0 +1,22 @@
+{
+    "workshop": {
+	"schema": {
+	    "version": "2020.03.02"
+	}
+    },
+    "userenv": {
+	"name": "centos8",
+	"label": "Centos 8",
+	"origin": {
+	    "image": "docker.io/library/centos",
+	    "tag": "8"
+	},
+	"properties": {
+	    "packages": {
+		"type": "rpm",
+		"manager": "dnf"
+	    }
+	}
+    },
+    "requirements": []
+}
