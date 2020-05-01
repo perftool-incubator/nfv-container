@@ -1,0 +1,15 @@
+{
+    "workshop": {
+	"schema": {
+	    "version": "2020.04.30"
+	}
+    },
+    "config": {
+	"cmd": "/root/run.sh",
+	"entrypoint": [
+	    "/usr/bin/dumb-init",
+	    "--"
+	],
+	"author": "krister"
+    }
+}
