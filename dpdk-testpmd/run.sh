@@ -117,7 +117,7 @@ function bind_device_driver() {
 bind_device_driver "${DEVICE_A}" "${DEVICE_A_VF_DRIVER}" "vfio-pci"
 bind_device_driver "${DEVICE_B}" "${DEVICE_B_VF_DRIVER}" "vfio-pci"
 
-testpmd \
+TESTPMD_CMD="testpmd \
     -l ${CPUS_ALLOWED_ARRAY[0]},${CPUS_ALLOWED_ARRAY[1]},${CPUS_ALLOWED_ARRAY[2]} \
     --socket-mem ${SOCKET_MEM} \
     -n ${MEMORY_CHANNELS} \
@@ -133,7 +133,12 @@ testpmd \
     --rxq 1 \
     --txq 1 \
     --rxd ${RING_SIZE} \
-    --txd ${RING_SIZE}
+    --txd ${RING_SIZE}"
+
+tmux new-session -s testpmd -d "${TESTPMD_CMD}"
+sleep infinity
+tmux capture-pane -S - -E - -p -t testpmd
+tmux kill-session -t testpmd
 
 bind_device_driver "${DEVICE_A}" "vfio-pci" "${DEVICE_A_VF_DRIVER}"
 bind_device_driver "${DEVICE_B}" "vfio-pci" "${DEVICE_B_VF_DRIVER}"

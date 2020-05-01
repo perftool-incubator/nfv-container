@@ -23,6 +23,7 @@
 		    "epel-release",
 		    "which",
 		    "git",
+		    "tmux",
 		    "wget",
 		    "python3",
 		    "net-tools",
