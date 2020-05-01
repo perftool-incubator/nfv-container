@@ -2,6 +2,8 @@
 
 # env vars:
 #   RING_SIZE (default 2048)
+#   SOCKET_MEM (default 1024,1024)
+#   MEMORY_CHANNELS (default 4)
 
 REPO_DIR="$(dirname $0)/.."
 
@@ -135,10 +137,31 @@ TESTPMD_CMD="testpmd \
     --rxd ${RING_SIZE} \
     --txd ${RING_SIZE}"
 
-tmux new-session -s testpmd -d "${TESTPMD_CMD}"
+echo
+echo "Launching: ${TESTPMD_CMD}"
+
+# start testpmd
+tmux new-session -s testpmd -d "${TESTPMD_CMD}; touch /tmp/testpmd-stopped; sleep infinity"
+
+# block, waiting for a signal telling me to stop
 sleep infinity
+
+# kill testpmd
+pkill testpmd
+
+# spin waiting for testpmd to exit
+while [ ! -e "/tmp/testpmd-stopped" ]; do
+    true
+done
+rm /tmp/testpmd-stopped
+
+# capture the output from testpmd
 tmux capture-pane -S - -E - -p -t testpmd
-tmux kill-session -t testpmd
+
+# kill the sleep that is keeping tmux running
+pkill -f sleep
+
+
 
 bind_device_driver "${DEVICE_A}" "vfio-pci" "${DEVICE_A_VF_DRIVER}"
 bind_device_driver "${DEVICE_B}" "vfio-pci" "${DEVICE_B_VF_DRIVER}"
