@@ -109,6 +109,13 @@ function bind_device_driver() {
 
     if [ "${OLD_DRIVER}" == "mlx5_core" -o "${NEW_DRIVER}" == "mlx5_core" ]; then
 	echo "WARNING: Ignoring bind driver request for '${DEVICE}' due to mlx5_core"
+
+	if [ "${OLD_DRIVER}" == "mlx5_core" ]; then
+	    NET_DEV=$(dpdk-devbind --status-dev net | grep "${DEVICE}" | sed -e "s|.*if=\(.*\)\sdrv.*|\1|")
+	    echo "Turning on promisc mode for ${DEVICE} -> ${NET_DEV}"
+	    ip link s ${NET_DEV} promisc on
+	fi
+
 	return
     fi
 
