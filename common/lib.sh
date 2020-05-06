@@ -27,3 +27,43 @@ function expand_number_list() {
 function separate_comma_list() {
     echo "${1}" | sed -e "s/,/ /g"
 }
+
+function disable_cpu_load_balancing() {
+    local cpus="${1}"
+    local file=
+    local current_flags=
+    local new_flags=
+
+    echo "############### Load Balance ##############"
+    echo "Disabling CPU Load Balancing"
+
+    for cpu in ${cpus}; do
+	for file in $(find /proc/sys/kernel/sched_domain/cpu$cpu -name flags -print); do
+	    current_flags=$(cat ${file})
+	    new_flags=$((current_flags & 0xfffe))
+	    echo "CPU ${cpu}: file=[${file}] current_flags=[${current_flags}] new_flags=[${new_flags}]"
+	    echo ${new_flags} > ${file}
+	done
+    done
+    echo "###########################################"
+}
+
+function enable_cpu_load_balancing() {
+    local cpus="${1}"
+    local file=
+    local current_flags=
+    local new_flags=
+
+    echo "############### Load Balance ##############"
+    echo "Disabling CPU Load Balancing"
+
+    for cpu in ${cpus}; do
+	for file in $(find /proc/sys/kernel/sched_domain/cpu$cpu -name flags -print); do
+	    current_flags=$(cat ${file})
+	    new_flags=$((current_flags | 0x1))
+	    echo "CPU ${cpu}: file=[${file}] current_flags=[${current_flags}] new_flags=[${new_flags}]"
+	    echo ${new_flags} > ${file}
+	done
+    done
+    echo "###########################################"
+}

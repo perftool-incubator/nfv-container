@@ -81,6 +81,10 @@ if [ -z "${MEMORY_CHANNELS}" ]; then
     MEMORY_CHANNELS="4"
 fi
 
+if [ -z "${DISABLE_CPU_LOAD_BALANCE}" ]; then
+    DISABLE_CPU_LOAD_BALANCE="y"
+fi
+
 CPUS_ALLOWED=$(get_cpus_allowed)
 CPUS_ALLOWED_EXPANDED=$(expand_number_list "${CPUS_ALLOWED}")
 CPUS_ALLOWED_SEPARATED=$(separate_comma_list "${CPUS_ALLOWED_EXPANDED}")
@@ -94,6 +98,7 @@ echo "CPUS_ALLOWED_SEPARATED=${CPUS_ALLOWED_SEPARATED}"
 echo "RING_SIZE=${RING_SIZE}"
 echo "SOCKET_MEM=${SOCKET_MEM}"
 echo "MEMORY_CHANNELS=${MEMORY_CHANNELS}"
+echo "DISABLE_CPU_LOAD_BALANCE=${DISABLE_CPU_LOAD_BALANCE}"
 echo "###########################################"
 
 if [ ${#CPUS_ALLOWED_ARRAY[@]} -lt 3 ]; then
@@ -125,6 +130,10 @@ function bind_device_driver() {
 
 bind_device_driver "${DEVICE_A}" "${DEVICE_A_VF_DRIVER}" "vfio-pci"
 bind_device_driver "${DEVICE_B}" "${DEVICE_B_VF_DRIVER}" "vfio-pci"
+
+if [ "${DISABLE_CPU_LOAD_BALANCE}" == "y" ]; then
+    disable_cpu_load_balancing "${CPUS_ALLOWED_SEPARATED}"
+fi
 
 TESTPMD_CMD="testpmd \
     -l ${CPUS_ALLOWED_ARRAY[0]},${CPUS_ALLOWED_ARRAY[1]},${CPUS_ALLOWED_ARRAY[2]} \
@@ -168,7 +177,9 @@ tmux capture-pane -S - -E - -p -t testpmd
 # kill the sleep that is keeping tmux running
 pkill -f sleep
 
-
+if [ "${DISABLE_CPU_LOAD_BALANCE}" == "y" ]; then
+    enable_cpu_load_balancing "${CPUS_ALLOWED_SEPARATED}"
+fi
 
 bind_device_driver "${DEVICE_A}" "vfio-pci" "${DEVICE_A_VF_DRIVER}"
 bind_device_driver "${DEVICE_B}" "vfio-pci" "${DEVICE_B_VF_DRIVER}"
