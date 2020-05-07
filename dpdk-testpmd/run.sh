@@ -213,6 +213,7 @@ TESTPMD_CMD="testpmd \
     --txq 1 \
     --rxd ${RING_SIZE} \
     --txd ${RING_SIZE}"
+TESTPMD_CMD=$(echo "${TESTPMD_CMD}" | sed -e "s/\s\+/ /g")
 
 echo "################# TESTPMD #################"
 echo -e "Command: ${TESTPMD_CMD}\n"
