@@ -2,7 +2,7 @@
 
 # env vars:
 #   RING_SIZE (default 2048)
-#   SOCKET_MEM (default 1024,1024)
+#   SOCKET_MEM (default autoconfigured)
 #   MEMORY_CHANNELS (default 4)
 #   PROMISC_DEVICES (default "n")
 
@@ -68,12 +68,55 @@ if [ -z "${DEVICE_A_VF_DRIVER}" -o -z "${DEVICE_B_VF_DRIVER}" ]; then
     exit 1
 fi
 
+CPUS_ALLOWED=$(get_cpus_allowed)
+CPUS_ALLOWED_EXPANDED=$(expand_number_list "${CPUS_ALLOWED}")
+CPUS_ALLOWED_SEPARATED=$(separate_comma_list "${CPUS_ALLOWED_EXPANDED}")
+CPUS_ALLOWED_ARRAY=(${CPUS_ALLOWED_SEPARATED})
+
 if [ -z "${RING_SIZE}" ]; then
     RING_SIZE=2048
 fi
 
+NODE_LIST="unknown"
+
 if [ -z "${SOCKET_MEM}" ]; then
-    SOCKET_MEM="1024,1024"
+    # automatically determine what NUMA nodes need memory allocated
+    if pushd /sys/devices/system/node > /dev/null; then
+	SOCKET_MEM=""
+
+	for node in $(ls -1d node*); do
+	    NODE_NUM=$(echo ${node} | sed -e "s/node//")
+	    if pushd $node > /dev/null; then
+		NODE_CPU_PRESENT=0
+
+		for cpu in ${CPUS_ALLOWED_SEPARATED}; do
+		    if [ -d "cpu${cpu}" ]; then
+			NODE_CPU_PRESENT=1
+		    fi
+		done
+
+		if [ "${NODE_CPU_PRESENT}" == "1" ]; then
+		    SOCKET_MEM+="1024,"
+		    NODE_LIST="${NODE_NUM},"
+		else
+		    SOCKET_MEM+="0,"
+		fi
+
+		popd > /dev/null
+	    fi
+	done
+
+	SOCKET_MEM=$(echo "${SOCKET_MEM}" | sed -e "s/,$//")
+	NODE_LIST=$(echo "${NODE_LIST}" | sed -e "s/,$//")
+
+	popd > /dev/null
+    fi
+
+    # if we didn't figure anything out just go with a safe default and
+    # see if it works
+    if [ -z "${SOCKET_MEM}" ]; then
+	SOCKET_MEM="1024,1024"
+    fi
 fi
 
 if [ -z "${MEMORY_CHANNELS}" ]; then
@@ -88,16 +131,12 @@ if [ -z "${PROMISC_DEVICES}" ]; then
     PROMISC_DEVICES="n"
 fi
 
-CPUS_ALLOWED=$(get_cpus_allowed)
-CPUS_ALLOWED_EXPANDED=$(expand_number_list "${CPUS_ALLOWED}")
-CPUS_ALLOWED_SEPARATED=$(separate_comma_list "${CPUS_ALLOWED_EXPANDED}")
-CPUS_ALLOWED_ARRAY=(${CPUS_ALLOWED_SEPARATED})
-
 echo
 echo "################# VALUES ##################"
 echo "CPUS_ALLOWED=${CPUS_ALLOWED}"
 echo "CPUS_ALLOWED_EXPANDED=${CPUS_ALLOWED_EXPANDED}"
 echo "CPUS_ALLOWED_SEPARATED=${CPUS_ALLOWED_SEPARATED}"
+echo "NODE_LIST=${NODE_LIST}"
 echo "RING_SIZE=${RING_SIZE}"
 echo "SOCKET_MEM=${SOCKET_MEM}"
 echo "MEMORY_CHANNELS=${MEMORY_CHANNELS}"
