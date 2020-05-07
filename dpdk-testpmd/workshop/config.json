@@ -8,6 +8,7 @@
 	"cmd": "/root/nfv-container/run.sh dpdk-testpmd",
 	"entrypoint": [
 	    "/usr/local/bin/dumb-init",
+	    "--single-child",
 	    "--"
 	],
 	"author": "krister"
