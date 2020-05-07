@@ -15,7 +15,7 @@ echo
 
 echo "############### Logging ENV ###############"
 env
-echo "###########################################"
+echo -e "###########################################\n"
 
 # find the SRIOV devices
 # OCP creates environment variables which contain information about the devices
@@ -38,14 +38,13 @@ else
     DEVICE_B=$(echo "${PCI_DEVICE_LIST}" | cut -f2 -d ' ')
 fi
 
-echo
+
 echo "################# DEVICES #################"
 echo "DEVICE_A=${DEVICE_A}"
 echo "DEVICE_B=${DEVICE_B}"
-echo "###########################################"
+echo -e "###########################################\n"
 
 if [ -z "${DEVICE_A}" -o -z "${DEVICE_B}" ]; then
-    echo
     echo "ERROR: Could not find DEVICE_A and/or DEVICE_B"
     exit 1
 fi
@@ -61,10 +60,9 @@ echo
 echo "################ VF DRIVER ################"
 echo "DEVICE_A_VF_DRIVER=${DEVICE_A_VF_DRIVER}"
 echo "DEVICE_B_VF_DRIVER=${DEVICE_B_VF_DRIVER}"
-echo "###########################################"
+echo -e "###########################################\n"
 
 if [ -z "${DEVICE_A_VF_DRIVER}" -o -z "${DEVICE_B_VF_DRIVER}" ]; then
-    echo
     echo "ERROR: Could not VF driver for DEVICE_A and/or DEVICE_B"
     exit 1
 fi
@@ -99,10 +97,9 @@ echo "RING_SIZE=${RING_SIZE}"
 echo "SOCKET_MEM=${SOCKET_MEM}"
 echo "MEMORY_CHANNELS=${MEMORY_CHANNELS}"
 echo "DISABLE_CPU_LOAD_BALANCE=${DISABLE_CPU_LOAD_BALANCE}"
-echo "###########################################"
+echo -e "###########################################\n"
 
 if [ ${#CPUS_ALLOWED_ARRAY[@]} -lt 3 ]; then
-    echo
     echo "ERROR: This test needs at least 3 CPUs!"
     exit 1
 fi
@@ -126,19 +123,21 @@ function bind_device_driver() {
 	    ip link s ${NET_DEV} promisc on
 	fi
 
+	echo -e "###########################################\n"
+
 	return
     fi
 
     dpdk-devbind -u ${DEVICE}
     dpdk-devbind -b ${NEW_DRIVER} ${DEVICE}
 
-    echo "###########################################"
+    echo -e "###########################################\n"
 }
 
 function device_status() {
     echo "############## DEVICE STATUS ##############"
     dpdk-devbind --status-dev net
-    echo "###########################################"
+    echo -e "###########################################\n"
 }
 
 device_status

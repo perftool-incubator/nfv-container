@@ -45,7 +45,7 @@ function disable_cpu_load_balancing() {
 	    echo ${new_flags} > ${file}
 	done
     done
-    echo "###########################################"
+    echo -e "###########################################\n"
 }
 
 function enable_cpu_load_balancing() {
@@ -65,5 +65,5 @@ function enable_cpu_load_balancing() {
 	    echo ${new_flags} > ${file}
 	done
     done
-    echo "###########################################"
+    echo -e "###########################################\n"
 }
