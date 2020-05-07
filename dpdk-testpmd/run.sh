@@ -181,8 +181,23 @@ echo "Launching: ${TESTPMD_CMD}"
 # start testpmd
 tmux new-session -s testpmd -d "${TESTPMD_CMD}; touch /tmp/testpmd-stopped; sleep infinity"
 
-# block, waiting for a signal telling me to stop
-sleep infinity
+function sigtermhandler() {
+    echo "Caught SIGTERM"
+    local PID=$(pgrep -f "coreutils.*sleep")
+    if [ -n "${PID}" ]; then
+	echo "Killing sleep with PID=${PID}"
+	kill ${PID}
+    else
+	echo "Could not find PID for sleep"
+    fi
+}
+
+trap sigtermhandler TERM
+
+# block, waiting for a signal telling me to stop.  backgrounding and
+# using wait allows for signal handling to occur
+sleep infinity &
+wait $!
 
 # kill testpmd
 pkill testpmd
