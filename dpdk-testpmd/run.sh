@@ -4,6 +4,7 @@
 #   RING_SIZE (default 2048)
 #   SOCKET_MEM (default 1024,1024)
 #   MEMORY_CHANNELS (default 4)
+#   PROMISC_DEVICES (default "n")
 
 REPO_DIR="$(dirname $0)/.."
 
@@ -83,6 +84,10 @@ if [ -z "${DISABLE_CPU_LOAD_BALANCE}" ]; then
     DISABLE_CPU_LOAD_BALANCE="y"
 fi
 
+if [ -z "${PROMISC_DEVICES}" ]; then
+    PROMISC_DEVICES="n"
+fi
+
 CPUS_ALLOWED=$(get_cpus_allowed)
 CPUS_ALLOWED_EXPANDED=$(expand_number_list "${CPUS_ALLOWED}")
 CPUS_ALLOWED_SEPARATED=$(separate_comma_list "${CPUS_ALLOWED_EXPANDED}")
@@ -97,6 +102,7 @@ echo "RING_SIZE=${RING_SIZE}"
 echo "SOCKET_MEM=${SOCKET_MEM}"
 echo "MEMORY_CHANNELS=${MEMORY_CHANNELS}"
 echo "DISABLE_CPU_LOAD_BALANCE=${DISABLE_CPU_LOAD_BALANCE}"
+echo "PROMISC_DEVICES=${PROMISC_DEVICES}"
 echo -e "###########################################\n"
 
 if [ ${#CPUS_ALLOWED_ARRAY[@]} -lt 3 ]; then
@@ -117,7 +123,7 @@ function bind_device_driver() {
     if [ "${OLD_DRIVER}" == "mlx5_core" -o "${NEW_DRIVER}" == "mlx5_core" ]; then
 	echo "WARNING: Ignoring bind driver request for '${DEVICE}' due to mlx5_core"
 
-	if [ "${OLD_DRIVER}" == "mlx5_core" ]; then
+	if [ "${PROMISC_DEVICES}" == "y" -a "${OLD_DRIVER}" == "mlx5_core" ]; then
 	    NET_DEV=$(dpdk-devbind --status-dev net | grep "${DEVICE}" | sed -e "s|.*if=\(.*\)\sdrv.*|\1|")
 	    echo "Turning on promisc mode for ${DEVICE} -> ${NET_DEV}"
 	    ip link s ${NET_DEV} promisc on
