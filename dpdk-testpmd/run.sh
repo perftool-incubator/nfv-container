@@ -175,8 +175,8 @@ TESTPMD_CMD="testpmd \
     --rxd ${RING_SIZE} \
     --txd ${RING_SIZE}"
 
-echo
-echo "Launching: ${TESTPMD_CMD}"
+echo "################# TESTPMD #################"
+echo -e "Command: ${TESTPMD_CMD}\n"
 
 # start testpmd
 tmux new-session -s testpmd -d "${TESTPMD_CMD}; touch /tmp/testpmd-stopped; sleep infinity"
@@ -209,7 +209,10 @@ done
 rm /tmp/testpmd-stopped
 
 # capture the output from testpmd
+echo -e "\nOutput from testpmd:\n"
 tmux capture-pane -S - -E - -p -t testpmd
+
+echo -e "###########################################\n"
 
 # kill the sleep that is keeping tmux running
 pkill -f sleep
