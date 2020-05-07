@@ -112,6 +112,11 @@ function bind_device_driver() {
     local OLD_DRIVER=${2}
     local NEW_DRIVER=${3}
 
+    echo "############### BIND DRIVER ###############"
+    echo "DEVICE=${DEVICE}"
+    echo "OLD_DRIVER=${OLD_DRIVER}"
+    echo "NEW_DRIVER=${NEW_DRIVER}"
+
     if [ "${OLD_DRIVER}" == "mlx5_core" -o "${NEW_DRIVER}" == "mlx5_core" ]; then
 	echo "WARNING: Ignoring bind driver request for '${DEVICE}' due to mlx5_core"
 
@@ -126,10 +131,22 @@ function bind_device_driver() {
 
     dpdk-devbind -u ${DEVICE}
     dpdk-devbind -b ${NEW_DRIVER} ${DEVICE}
+
+    echo "###########################################"
 }
+
+function device_status() {
+    echo "############## DEVICE STATUS ##############"
+    dpdk-devbind --status-dev net
+    echo "###########################################"
+}
+
+device_status
 
 bind_device_driver "${DEVICE_A}" "${DEVICE_A_VF_DRIVER}" "vfio-pci"
 bind_device_driver "${DEVICE_B}" "${DEVICE_B_VF_DRIVER}" "vfio-pci"
+
+device_status
 
 if [ "${DISABLE_CPU_LOAD_BALANCE}" == "y" ]; then
     disable_cpu_load_balancing "${CPUS_ALLOWED_SEPARATED}"
@@ -183,3 +200,5 @@ fi
 
 bind_device_driver "${DEVICE_A}" "vfio-pci" "${DEVICE_A_VF_DRIVER}"
 bind_device_driver "${DEVICE_B}" "vfio-pci" "${DEVICE_B_VF_DRIVER}"
+
+device_status
