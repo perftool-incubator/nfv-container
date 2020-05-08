@@ -5,6 +5,8 @@
 #   SOCKET_MEM (default autoconfigured)
 #   MEMORY_CHANNELS (default 4)
 #   PROMISC_DEVICES (default "n")
+#   PEER_0_MAC (no default, error)
+#   PEER_1_MAC (no default, error)
 
 REPO_DIR="$(dirname $0)/.."
 
@@ -142,7 +144,14 @@ echo "SOCKET_MEM=${SOCKET_MEM}"
 echo "MEMORY_CHANNELS=${MEMORY_CHANNELS}"
 echo "DISABLE_CPU_LOAD_BALANCE=${DISABLE_CPU_LOAD_BALANCE}"
 echo "PROMISC_DEVICES=${PROMISC_DEVICES}"
+echo "PEER_0_MAC=${PEER_0_MAC}"
+echo "PEER_1_MAC=${PEER_1_MAC}"
 echo -e "###########################################\n"
+
+if [ -z "${PEER_0_MAC}" -o -z "${PEER_1_MAC}" ]; then
+    echo "ERROR: You must define PEER_0_MAC and PEER_1_MAC environment variables"
+    exit 1
+fi
 
 if [ ${#CPUS_ALLOWED_ARRAY[@]} -lt 3 ]; then
     echo "ERROR: This test needs at least 3 CPUs!"
@@ -205,6 +214,9 @@ TESTPMD_CMD="testpmd \
     -w ${DEVICE_A} \
     -w ${DEVICE_B} \
     -- \
+    --forward-mode=mac \
+    --eth-peer=0,${PEER_0_MAC} \
+    --eth-peer=1,${PEER_1_MAC} \
     --nb-cores 2 \
     --nb-ports 2 \
     --portmask 3 \
