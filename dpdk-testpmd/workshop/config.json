@@ -5,9 +5,10 @@
 	}
     },
     "config": {
-	"cmd": "/root/run.sh",
+	"cmd": "/root/nfv-container/run.sh dpdk-testpmd",
 	"entrypoint": [
-	    "/usr/bin/dumb-init",
+	    "/usr/local/bin/dumb-init",
+	    "--single-child",
 	    "--"
 	],
 	"author": "krister"

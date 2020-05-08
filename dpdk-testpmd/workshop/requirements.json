@@ -9,7 +9,8 @@
 	    "name": "centos8",
 	    "requirements": [
 		"dependencies",
-		"dumb-init"
+		"dumb-init",
+		"nfv-container"
 	    ]
 	}
     ],
@@ -21,6 +22,8 @@
 		"packages": [
 		    "epel-release",
 		    "which",
+		    "git",
+		    "tmux",
 		    "wget",
 		    "python3",
 		    "net-tools",
@@ -42,6 +45,15 @@
 		"commands": [
 		    "wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64",
 		    "chmod +x /usr/local/bin/dumb-init"
+		]
+	    }
+	},
+	{
+	    "name": "nfv-container",
+	    "type": "manual",
+	    "manual_info": {
+		"commands": [
+		    "git clone %NFV_CONTAINER% /root/nfv-container"
 		]
 	    }
 	}
