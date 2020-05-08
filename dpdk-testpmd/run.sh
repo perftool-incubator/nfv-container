@@ -12,12 +12,14 @@ REPO_DIR="$(dirname $0)/.."
 
 source ${REPO_DIR}/common/lib.sh
 
-echo
-echo "Starting ${0}"
-echo
+echo -e "\nStarting ${0}\n"
 
 echo "############### Logging ENV ###############"
 env
+echo -e "###########################################\n"
+
+echo "############### IP Address ################"
+ip address
 echo -e "###########################################\n"
 
 # find the SRIOV devices
@@ -41,7 +43,6 @@ else
     DEVICE_B=$(echo "${PCI_DEVICE_LIST}" | cut -f2 -d ' ')
 fi
 
-
 echo "################# DEVICES #################"
 echo "DEVICE_A=${DEVICE_A}"
 echo "DEVICE_B=${DEVICE_B}"
@@ -59,7 +60,6 @@ function get_vf_driver() {
 DEVICE_A_VF_DRIVER=$(get_vf_driver ${DEVICE_A})
 DEVICE_B_VF_DRIVER=$(get_vf_driver ${DEVICE_B})
 
-echo
 echo "################ VF DRIVER ################"
 echo "DEVICE_A_VF_DRIVER=${DEVICE_A_VF_DRIVER}"
 echo "DEVICE_B_VF_DRIVER=${DEVICE_B_VF_DRIVER}"
@@ -133,7 +133,6 @@ if [ -z "${PROMISC_DEVICES}" ]; then
     PROMISC_DEVICES="n"
 fi
 
-echo
 echo "################# VALUES ##################"
 echo "CPUS_ALLOWED=${CPUS_ALLOWED}"
 echo "CPUS_ALLOWED_EXPANDED=${CPUS_ALLOWED_EXPANDED}"
