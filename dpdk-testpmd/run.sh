@@ -7,6 +7,8 @@
 #   PROMISC_DEVICES (default "n")
 #   PEER_0_MAC (no default, error)
 #   PEER_1_MAC (no default, error)
+#   SRIOV_ID_A (no default, error)
+#   SRIOV_ID_B (no default, error)
 
 REPO_DIR="$(dirname $0)/.."
 
@@ -22,26 +24,19 @@ echo "############### IP Address ################"
 ip address
 echo -e "###########################################\n"
 
+if [ -z "${SRIOV_ID_A}" -o -z "${SRIOV_ID_B}" ]; then
+    echo "ERROR: You must specify SRIOV_ID_A and SRIOV_ID_B environment variables"
+    exit 1
+fi
+
 # find the SRIOV devices
 # OCP creates environment variables which contain information about the devices
 # example:
 #   PCIDEVICE_OPENSHIFT_IO_MELLANOXA=0000:86:00.2
 #   PCIDEVICE_OPENSHIFT_IO_MELLANOXB=0000:86:01.4
-PCI_DEVICE_LIST=$(env | sed -n -r -e 's/PCIDEVICE.*=(.*)/\1/p' | tr ',\n' ' ')
 
-if [ -z "${PCI_DEVICE_LIST}" ]; then
-    echo "ERROR: Couldn't find any PCI devices!"
-    exit 1
-else
-    DEVICE_COUNT=$(echo "${PCI_DEVICE_LIST}" | wc -w)
-    if [ "${DEVICE_COUNT}" != 2 ]; then
-	echo "ERROR: This script only supports 2 devices!"
-	exit 1
-    fi
-
-    DEVICE_A=$(echo "${PCI_DEVICE_LIST}" | cut -f1 -d ' ')
-    DEVICE_B=$(echo "${PCI_DEVICE_LIST}" | cut -f2 -d ' ')
-fi
+DEVICE_A=$(env | grep "PCIDEVICE_OPENSHIFT_IO_${SRIOV_ID_A}" | cut -f2 -d'=')
+DEVICE_B=$(env | grep "PCIDEVICE_OPENSHIFT_IO_${SRIOV_ID_B}" | cut -f2 -d'=')
 
 echo "################# DEVICES #################"
 echo "DEVICE_A=${DEVICE_A}"
