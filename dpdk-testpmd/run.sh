@@ -151,6 +151,25 @@ fi
 if [ ${#CPUS_ALLOWED_ARRAY[@]} -lt 3 ]; then
     echo "ERROR: This test needs at least 3 CPUs!"
     exit 1
+else
+    TESTPMD_CPU_LIST="${CPUS_ALLOWED_EXPANDED}"
+
+    if [ ${#CPUS_ALLOWED_ARRAY[@]} -eq 3 ]; then
+	TESTPMD_QUEUES=1
+	TESTPMD_CORES=2
+    elif [ ${#CPUS_ALLOWED_ARRAY[@]} -eq 5 ]; then
+	TESTPMD_QUEUES=2
+	TESTPMD_CORES=4
+    elif [ ${#CPUS_ALLOWED_ARRAY[@]} -eq 7 ]; then
+	TESTPMD_QUEUES=3
+	TESTPMD_CORES=6
+    elif [ ${#CPUS_ALLOWED_ARRAY[@]} -eq 9 ]; then
+	TESTPMD_QUEUES=4
+	TESTPMD_CORES=8
+    else
+	echo "ERROR: Unsupported CPU count,  ${#CPUS_ALLOWED_ARRAY[@]}, must be 3 or 5 or 7 or 9!"
+	exit 1
+    fi
 fi
 
 function bind_device_driver() {
@@ -201,7 +220,7 @@ if [ "${DISABLE_CPU_LOAD_BALANCE}" == "y" ]; then
 fi
 
 TESTPMD_CMD="testpmd \
-    -l ${CPUS_ALLOWED_ARRAY[0]},${CPUS_ALLOWED_ARRAY[1]},${CPUS_ALLOWED_ARRAY[2]} \
+    -l ${TESTPMD_CPU_LIST} \
     --socket-mem ${SOCKET_MEM} \
     -n ${MEMORY_CHANNELS} \
     --proc-type auto \
@@ -212,12 +231,12 @@ TESTPMD_CMD="testpmd \
     --forward-mode=mac \
     --eth-peer=0,${PEER_A_MAC} \
     --eth-peer=1,${PEER_B_MAC} \
-    --nb-cores 2 \
+    --nb-cores ${TESTPMD_CORES} \
     --nb-ports 2 \
     --portmask 3 \
     --auto-start \
-    --rxq 1 \
-    --txq 1 \
+    --rxq ${TESTPMD_QUEUES} \
+    --txq ${TESTPMD_QUEUES} \
     --rxd ${RING_SIZE} \
     --txd ${RING_SIZE}"
 TESTPMD_CMD=$(echo "${TESTPMD_CMD}" | sed -e "s/\s\+/ /g")
