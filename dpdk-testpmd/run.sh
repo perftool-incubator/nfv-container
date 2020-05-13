@@ -5,40 +5,38 @@
 #   SOCKET_MEM (default autoconfigured)
 #   MEMORY_CHANNELS (default 4)
 #   PROMISC_DEVICES (default "n")
+#   PEER_A_MAC (no default, error)
+#   PEER_B_MAC (no default, error)
+#   SRIOV_ID_A (no default, error)
+#   SRIOV_ID_B (no default, error)
 
 REPO_DIR="$(dirname $0)/.."
 
 source ${REPO_DIR}/common/lib.sh
 
-echo
-echo "Starting ${0}"
-echo
+echo -e "\nStarting ${0}\n"
 
 echo "############### Logging ENV ###############"
 env
 echo -e "###########################################\n"
+
+echo "############### IP Address ################"
+ip address
+echo -e "###########################################\n"
+
+if [ -z "${SRIOV_ID_A}" -o -z "${SRIOV_ID_B}" ]; then
+    echo "ERROR: You must specify SRIOV_ID_A and SRIOV_ID_B environment variables"
+    exit 1
+fi
 
 # find the SRIOV devices
 # OCP creates environment variables which contain information about the devices
 # example:
 #   PCIDEVICE_OPENSHIFT_IO_MELLANOXA=0000:86:00.2
 #   PCIDEVICE_OPENSHIFT_IO_MELLANOXB=0000:86:01.4
-PCI_DEVICE_LIST=$(env | sed -n -r -e 's/PCIDEVICE.*=(.*)/\1/p' | tr ',\n' ' ')
 
-if [ -z "${PCI_DEVICE_LIST}" ]; then
-    echo "ERROR: Couldn't find any PCI devices!"
-    exit 1
-else
-    DEVICE_COUNT=$(echo "${PCI_DEVICE_LIST}" | wc -w)
-    if [ "${DEVICE_COUNT}" != 2 ]; then
-	echo "ERROR: This script only supports 2 devices!"
-	exit 1
-    fi
-
-    DEVICE_A=$(echo "${PCI_DEVICE_LIST}" | cut -f1 -d ' ')
-    DEVICE_B=$(echo "${PCI_DEVICE_LIST}" | cut -f2 -d ' ')
-fi
-
+DEVICE_A=$(env | grep "PCIDEVICE_OPENSHIFT_IO_${SRIOV_ID_A}" | cut -f2 -d'=')
+DEVICE_B=$(env | grep "PCIDEVICE_OPENSHIFT_IO_${SRIOV_ID_B}" | cut -f2 -d'=')
 
 echo "################# DEVICES #################"
 echo "DEVICE_A=${DEVICE_A}"
@@ -57,7 +55,6 @@ function get_vf_driver() {
 DEVICE_A_VF_DRIVER=$(get_vf_driver ${DEVICE_A})
 DEVICE_B_VF_DRIVER=$(get_vf_driver ${DEVICE_B})
 
-echo
 echo "################ VF DRIVER ################"
 echo "DEVICE_A_VF_DRIVER=${DEVICE_A_VF_DRIVER}"
 echo "DEVICE_B_VF_DRIVER=${DEVICE_B_VF_DRIVER}"
@@ -131,7 +128,6 @@ if [ -z "${PROMISC_DEVICES}" ]; then
     PROMISC_DEVICES="n"
 fi
 
-echo
 echo "################# VALUES ##################"
 echo "CPUS_ALLOWED=${CPUS_ALLOWED}"
 echo "CPUS_ALLOWED_EXPANDED=${CPUS_ALLOWED_EXPANDED}"
@@ -142,7 +138,14 @@ echo "SOCKET_MEM=${SOCKET_MEM}"
 echo "MEMORY_CHANNELS=${MEMORY_CHANNELS}"
 echo "DISABLE_CPU_LOAD_BALANCE=${DISABLE_CPU_LOAD_BALANCE}"
 echo "PROMISC_DEVICES=${PROMISC_DEVICES}"
+echo "PEER_A_MAC=${PEER_A_MAC}"
+echo "PEER_B_MAC=${PEER_B_MAC}"
 echo -e "###########################################\n"
+
+if [ -z "${PEER_A_MAC}" -o -z "${PEER_B_MAC}" ]; then
+    echo "ERROR: You must define PEER_A_MAC and PEER_B_MAC environment variables"
+    exit 1
+fi
 
 if [ ${#CPUS_ALLOWED_ARRAY[@]} -lt 3 ]; then
     echo "ERROR: This test needs at least 3 CPUs!"
@@ -205,6 +208,9 @@ TESTPMD_CMD="testpmd \
     -w ${DEVICE_A} \
     -w ${DEVICE_B} \
     -- \
+    --forward-mode=mac \
+    --eth-peer=0,${PEER_A_MAC} \
+    --eth-peer=1,${PEER_B_MAC} \
     --nb-cores 2 \
     --nb-ports 2 \
     --portmask 3 \
