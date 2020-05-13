@@ -5,6 +5,7 @@
 #   SOCKET_MEM (default autoconfigured)
 #   MEMORY_CHANNELS (default 4)
 #   PROMISC_DEVICES (default "n")
+#   DISABLE_CPU_LOAD_BALANCE (default "n")
 #   PEER_A_MAC (no default, error)
 #   PEER_B_MAC (no default, error)
 #   SRIOV_ID_A (no default, error)
@@ -121,7 +122,7 @@ if [ -z "${MEMORY_CHANNELS}" ]; then
 fi
 
 if [ -z "${DISABLE_CPU_LOAD_BALANCE}" ]; then
-    DISABLE_CPU_LOAD_BALANCE="y"
+    DISABLE_CPU_LOAD_BALANCE="n"
 fi
 
 if [ -z "${PROMISC_DEVICES}" ]; then
