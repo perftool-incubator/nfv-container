@@ -10,6 +10,7 @@
 #   PEER_B_MAC (no default, error)
 #   SRIOV_ID_A (no default, error)
 #   SRIOV_ID_B (no default, error)
+#   MTU (default 1518)
 
 REPO_DIR="$(dirname $0)/.."
 
@@ -129,6 +130,10 @@ if [ -z "${PROMISC_DEVICES}" ]; then
     PROMISC_DEVICES="n"
 fi
 
+if [ -z "${MTU}" ]; then
+    MTU="1518"
+fi
+
 echo "################# VALUES ##################"
 echo "CPUS_ALLOWED=${CPUS_ALLOWED}"
 echo "CPUS_ALLOWED_EXPANDED=${CPUS_ALLOWED_EXPANDED}"
@@ -141,6 +146,7 @@ echo "DISABLE_CPU_LOAD_BALANCE=${DISABLE_CPU_LOAD_BALANCE}"
 echo "PROMISC_DEVICES=${PROMISC_DEVICES}"
 echo "PEER_A_MAC=${PEER_A_MAC}"
 echo "PEER_B_MAC=${PEER_B_MAC}"
+echo "MTU=${MTU}"
 echo -e "###########################################\n"
 
 if [ -z "${PEER_A_MAC}" -o -z "${PEER_B_MAC}" ]; then
@@ -219,6 +225,13 @@ if [ "${DISABLE_CPU_LOAD_BALANCE}" == "y" ]; then
     disable_cpu_load_balancing "${CPUS_ALLOWED_SEPARATED}"
 fi
 
+EXTRA_TESTPMD_ARGS=""
+if [ ${MTU} -gt 2048 ]; then
+    MBUF_SIZE=16384
+    MBUFS=27242
+    EXTRA_TESTPMD_ARGS+=" --mbuf-size=${MBUF_SIZE} --total-num-mbufs=${MBUFS}"
+fi
+
 TESTPMD_CMD="testpmd \
     -l ${TESTPMD_CPU_LIST} \
     --socket-mem ${SOCKET_MEM} \
@@ -238,7 +251,9 @@ TESTPMD_CMD="testpmd \
     --rxq ${TESTPMD_QUEUES} \
     --txq ${TESTPMD_QUEUES} \
     --rxd ${RING_SIZE} \
-    --txd ${RING_SIZE}"
+    --txd ${RING_SIZE} \
+    --max-pkt-len=${MTU} \
+    ${EXTRA_TESTPMD_ARGS}"
 TESTPMD_CMD=$(echo "${TESTPMD_CMD}" | sed -e "s/\s\+/ /g")
 
 echo "################# TESTPMD #################"
