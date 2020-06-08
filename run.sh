@@ -5,6 +5,16 @@ REPO_DIR=$(dirname $0)
 echo "################# Startup #################"
 
 if pushd ${REPO_DIR} > /dev/null; then
+    echo "nfv-container GIT remote information:"
+    for repo in $(git remote); do
+	git remote show ${repo}
+    done
+
+    echo
+    echo "nfv-container GIT branch information:"
+    git branch -vv
+    echo
+
     echo "Making sure nfv-container GIT repo is updated..."
     git pull
     echo
