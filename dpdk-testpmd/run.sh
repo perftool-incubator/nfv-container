@@ -6,8 +6,9 @@
 #   MEMORY_CHANNELS (default 4)
 #   PROMISC_DEVICES (default "n")
 #   DISABLE_CPU_LOAD_BALANCE (default "n")
-#   PEER_A_MAC (no default, error)
-#   PEER_B_MAC (no default, error)
+#   FORWARD_MODE (default "mac")
+#   PEER_A_MAC (no default, required if FORWARD_MODE=="mac", error)
+#   PEER_B_MAC (no default, required if FORWARD_MODE=="mac", error)
 #   SRIOV_ID_A (no default, error)
 #   SRIOV_ID_B (no default, error)
 #   MTU (default 1518)
@@ -134,6 +135,10 @@ if [ -z "${MTU}" ]; then
     MTU="1518"
 fi
 
+if [ -z "${FORWARD_MODE}" ]; then
+    FORWARD_MODE="mac"
+fi
+
 echo "################# VALUES ##################"
 echo "CPUS_ALLOWED=${CPUS_ALLOWED}"
 echo "CPUS_ALLOWED_EXPANDED=${CPUS_ALLOWED_EXPANDED}"
@@ -144,14 +149,31 @@ echo "SOCKET_MEM=${SOCKET_MEM}"
 echo "MEMORY_CHANNELS=${MEMORY_CHANNELS}"
 echo "DISABLE_CPU_LOAD_BALANCE=${DISABLE_CPU_LOAD_BALANCE}"
 echo "PROMISC_DEVICES=${PROMISC_DEVICES}"
+echo "FORWARD_MODE=${FORWARD_MODE}"
 echo "PEER_A_MAC=${PEER_A_MAC}"
 echo "PEER_B_MAC=${PEER_B_MAC}"
 echo "MTU=${MTU}"
 echo -e "###########################################\n"
 
-if [ -z "${PEER_A_MAC}" -o -z "${PEER_B_MAC}" ]; then
-    echo "ERROR: You must define PEER_A_MAC and PEER_B_MAC environment variables"
-    exit 1
+case "${FORWARD_MODE}" in
+    "mac"|"io")
+	FORWARD_MODE="${FORWARD_MODE}"
+	;;
+    *)
+	echo "ERROR: FORWARD_MODE must be either 'mac' or 'io'"
+	exit 1
+	;;
+esac
+
+if [ "${FOWARD_MODE}" == "mac" ]; then
+    if [ -z "${PEER_A_MAC}" -o -z "${PEER_B_MAC}" ]; then
+	echo "ERROR: You must define PEER_A_MAC and PEER_B_MAC environment variables"
+	exit 1
+    fi
+
+    TESTPMD_FORWARD_MODE_ARGS=" --eth-peer=0,${PEER_A_MAC} \
+                                --eth-peer=1,${PEER_B_MAC} \ "
+
 fi
 
 if [ ${#CPUS_ALLOWED_ARRAY[@]} -lt 3 ]; then
@@ -241,9 +263,8 @@ TESTPMD_CMD="testpmd \
     -w ${DEVICE_A} \
     -w ${DEVICE_B} \
     -- \
-    --forward-mode=mac \
-    --eth-peer=0,${PEER_A_MAC} \
-    --eth-peer=1,${PEER_B_MAC} \
+    --forward-mode=${FORWARD_MODE} \
+    ${TESTPMD_FORWARD_MODE_ARGS} \
     --nb-cores ${TESTPMD_CORES} \
     --nb-ports 2 \
     --portmask 3 \
